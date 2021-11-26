@@ -1,9 +1,5 @@
 package ru.netology.graphics.image;
 
-import ru.netology.graphics.image.BadImageSizeException;
-import ru.netology.graphics.image.TextColorSchema;
-import ru.netology.graphics.image.TextGraphicsConverter;
-
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -13,103 +9,50 @@ import java.io.IOException;
 import java.net.URL;
 
 public class Converter implements TextGraphicsConverter {
+    int width;
+    int height;
     int maxWidth = Integer.MAX_VALUE;
     int maxHeight = Integer.MAX_VALUE;
     double maxRatio = Double.MAX_VALUE;
     TextColorSchema textColorSchema = new Schema();
 
-    @Override
-    public String convert(String url) throws IOException, BadImageSizeException {
-        // Вот так просто мы скачаем картинку из интернета :)
-        BufferedImage img = ImageIO.read(new URL(url));
-
-        // Если конвертер попросили проверять на максимально допустимое
-        // соотношение сторон изображения, то вам здесь надо сделать эту проверку,
-        // и, если картинка не подходит, выбросить исключение BadImageSizeException.
-        // Чтобы получить ширину картинки, вызовите img.getWidth(), высоту - img.getHeight()
-        int currentWidth = img.getWidth();
-        int currentHeight = img.getHeight();
-        double currentRatio = (double) currentWidth / (double) currentHeight;
+    private void isRatioCorrect() throws BadImageSizeException {
+        double currentRatio = (double) width / (double) height;
         if (currentRatio > maxRatio) {
             throw new BadImageSizeException(currentRatio, maxRatio);
         }
+    }
 
-        // Если конвертеру выставили максимально допустимые ширину и/или высоту,
-        // вам надо по ним и по текущим высоте и ширине вычислить новые высоту
-        // и ширину.
-        // Соблюдение пропорций означает, что вы должны уменьшать ширину и высоту должны
-        // в одинаковое количество раз.
-        // Пример 1: макс. допустимые 100x100, а картинка 500x200. Новый размер
-        // будет 100x40 (в 5 раз меньше).
-        // Пример 2: макс. допустимые 100x30, а картинка 150x15. Новый размер
-        // будет 100x10 (в 1.5 раза меньше).
-        // Подумайте, какими действиями можно вычислить новые размеры.
-        // Не получается? Спросите вашего руководителя по курсовой, поможем!
-        int newWidth = currentWidth;
-        int newHeight = currentHeight;
-        if (currentWidth > maxWidth || currentHeight > maxHeight) {
-            int sizeRatio = currentWidth / maxWidth;
+    private Image imgSizeCorrection(BufferedImage img) {
+        if (width > maxWidth || height > maxHeight) {
+            int sizeRatio = width / maxWidth;
             if (sizeRatio != 1) {
-                newWidth /= sizeRatio;
-                newHeight /= sizeRatio;
+                width /= sizeRatio;
+                height /= sizeRatio;
             }
         }
+        return img.getScaledInstance(width, height, BufferedImage.SCALE_SMOOTH);
+    }
 
-        // Теперь нам надо попросить картинку изменить свои размеры на новые.
-        // Последний параметр означает, что мы просим картинку плавно сузиться
-        // на новые размеры. В результате мы получаем ссылку на новую картинку, которая
-        // представляет собой суженную старую.
-        Image scaledImage = img.getScaledInstance(newWidth, newHeight, BufferedImage.SCALE_SMOOTH);
-
-        // Теперь сделаем её чёрно-белой. Для этого поступим так:
-        // Создадим новую пустую картинку нужных размеров, заранее указав последним
-        // параметром чёрно-белую цветовую палитру:
-        BufferedImage bwImg = new BufferedImage(newWidth, newHeight, BufferedImage.TYPE_BYTE_GRAY);
-        // Попросим у этой картинки инструмент для рисования на ней:
+    private BufferedImage imgConverterBlackWhite(Image scaledImage) {
+        BufferedImage bwImg = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_GRAY);
         Graphics2D graphics = bwImg.createGraphics();
-        // А этому инструменту скажем, чтобы он скопировал содержимое из нашей суженной картинки:
         graphics.drawImage(scaledImage, 0, 0, null);
+        return bwImg;
+    }
 
-        // Теперь в bwImg у нас лежит чёрно-белая картинка нужных нам размеров.
-        // Вы можете отслеживать каждый из этапов, просто в любом удобном для
-        // вас моменте сохранив промежуточную картинку в файл через:
-        ImageIO.write(bwImg, "png", new File("out.png"));
-        // После вызова этой инструкции у вас в проекте появится файл картинки out.png
+    private void imgSaveToDisk(BufferedImage img, String fileName) throws IOException {
+        ImageIO.write(img, "png", new File(fileName));
+    }
 
-        // Теперь давайте пройдёмся по пикселям нашего изображения.
-        // Если для рисования мы просили у картинки .createGraphics(),
-        // то для прохода по пикселям нам нужен будет этот инструмент:
-        WritableRaster bwRaster = bwImg.getRaster();
-
-
-        // Он хорош тем, что у него мы можем спросить пиксель на нужных
-        // нам координатах, указав номер столбца (w) и строки (h)
-        // int color = bwRaster.getPixel(w, h, new int[3])[0];
-        // Выглядит странно? Согласен. Сам возвращаемый методом пиксель — это
-        // массив из трёх интов, обычно это интенсивность красного, зелёного и синего.
-        // Но у нашей чёрно-белой картинки цветов нет, и нас интересует
-        // только первое значение в массиве. Вы спросите, а зачем
-        // мы ещё параметром передаём интовый массив на три ячейки?
-        // Дело в том, что этот метод не хочет создавать его сам и просит
-        // вас сделать это, а сам метод лишь заполнит его и вернёт.
-        // Потому что создавать массивы каждый раз слишком медленно. Вы можете создать
-        // массив один раз, сохранить в переменную и передавать один
-        // и тот же массив в метод, ускорив тем самым программу.
-
-        // Вам осталось пробежаться двойным циклом по всем столбцам (ширина)
-        // и строкам (высота) изображения, на каждой внутренней итерации
-        // получить степень белого пикселя (int color выше) и по ней
-        // получить соответствующий символ c. Логикой превращения цвета
-        // в символ будет заниматься другой объект, который мы рассмотрим ниже
-
+    private StringBuilder imgApplySchema(BufferedImage img) {
+        WritableRaster bwRaster = img.getRaster();
         int[] arg = new int[3];
         StringBuilder sb = new StringBuilder();
         sb.append("<div style=\"white-space: nowrap;\">");
         for (int h = 0; h < bwRaster.getHeight(); h++) {
             for (int w = 0; w < bwRaster.getWidth(); w++) {
-//                System.out.println(w + " - " + h);
                 int color = bwRaster.getPixel(w, h, arg)[0];
-                //запоминаем символ c, например, в двумерном массиве или как-то ещё на ваше усмотрение
                 char c = textColorSchema.convert(color);
                 sb.append(c).append(c);
                 System.out.print(c + "" + c);
@@ -118,13 +61,28 @@ public class Converter implements TextGraphicsConverter {
             System.out.println();
         }
         sb.append("</div>");
-        // Осталось собрать все символы в один большой текст
-        // Для того, чтобы изображение не было слишком узким, рекомендую
-        // каждый пиксель превращать в два повторяющихся символа, полученных
-        // от схемы.
-
-        return sb.toString(); // Возвращаем собранный текст.
+        return sb;
     }
+
+    @Override
+    public String convert(String url) throws IOException, BadImageSizeException {
+
+        BufferedImage img = ImageIO.read(new URL(url));
+        width = img.getWidth();
+        height = img.getHeight();
+
+        isRatioCorrect();
+        Image scaledImage = imgSizeCorrection(img);
+        BufferedImage bwImg = imgConverterBlackWhite(scaledImage);
+
+        imgSaveToDisk(bwImg,"bw_pic.png");
+
+        StringBuilder sb = imgApplySchema(bwImg);
+
+        return sb.toString();
+    }
+
+
 
     @Override
     public void setMaxWidth(int maxWidth) {
