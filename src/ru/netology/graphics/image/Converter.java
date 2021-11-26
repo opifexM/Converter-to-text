@@ -11,10 +11,24 @@ import java.net.URL;
 public class Converter implements TextGraphicsConverter {
     int width;
     int height;
-    int maxWidth = Integer.MAX_VALUE;
-    int maxHeight = Integer.MAX_VALUE;
-    double maxRatio = Double.MAX_VALUE;
-    TextColorSchema textColorSchema = new Schema();
+    int maxWidth;
+    int maxHeight;
+    double maxRatio;
+    TextColorSchema textColorSchema;
+
+    public Converter() {
+        maxWidth = Integer.MAX_VALUE;
+        maxHeight = Integer.MAX_VALUE;
+        maxRatio = Double.MAX_VALUE;
+        textColorSchema = new Schema();
+    }
+
+    public Converter(int maxWidth, int maxHeight, double maxRatio, TextColorSchema textColorSchema) {
+        this.maxWidth = maxWidth;
+        this.maxHeight = maxHeight;
+        this.maxRatio = maxRatio;
+        this.textColorSchema = textColorSchema;
+    }
 
     private void isRatioCorrect() throws BadImageSizeException {
         double currentRatio = (double) width / (double) height;
