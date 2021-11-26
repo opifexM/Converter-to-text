@@ -25,11 +25,11 @@ public class Converter implements TextGraphicsConverter {
 
     private Image imgSizeCorrection(BufferedImage img) {
         if (width > maxWidth || height > maxHeight) {
-            int sizeRatio = width / maxWidth;
-            if (sizeRatio != 1) {
-                width /= sizeRatio;
-                height /= sizeRatio;
-            }
+            int sizeWithRatio = width / maxWidth;
+            int sizeHeightRatio = height / maxHeight;
+            int sizeRatio = Math.max(sizeWithRatio, sizeHeightRatio);
+            width /= sizeRatio;
+            height /= sizeRatio;
         }
         return img.getScaledInstance(width, height, BufferedImage.SCALE_SMOOTH);
     }
@@ -75,13 +75,12 @@ public class Converter implements TextGraphicsConverter {
         Image scaledImage = imgSizeCorrection(img);
         BufferedImage bwImg = imgConverterBlackWhite(scaledImage);
 
-        imgSaveToDisk(bwImg,"bw_pic.png");
+        imgSaveToDisk(bwImg, "bw_pic.png");
 
         StringBuilder sb = imgApplySchema(bwImg);
 
         return sb.toString();
     }
-
 
 
     @Override
