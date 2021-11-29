@@ -31,7 +31,7 @@ public class Converter implements TextGraphicsConverter {
     }
 
     private void isRatioCorrect() throws BadImageSizeException {
-        double currentRatio = (double) width / (double) height;
+        double currentRatio = (double) width / height;
         if (currentRatio > maxRatio) {
             throw new BadImageSizeException(currentRatio, maxRatio);
         }
