@@ -48,7 +48,7 @@ public class Converter implements TextGraphicsConverter {
         return img.getScaledInstance(width, height, BufferedImage.SCALE_SMOOTH);
     }
 
-    private BufferedImage imgConverterBlackWhite(Image scaledImage) {
+    private BufferedImage convertImgToBlackWhite(Image scaledImage) {
         BufferedImage bwImg = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_GRAY);
         Graphics2D graphics = bwImg.createGraphics();
         graphics.drawImage(scaledImage, 0, 0, null);
@@ -87,7 +87,7 @@ public class Converter implements TextGraphicsConverter {
 
         isRatioCorrect();
         Image scaledImage = imgSizeCorrection(img);
-        BufferedImage bwImg = imgConverterBlackWhite(scaledImage);
+        BufferedImage bwImg = convertImgToBlackWhite(scaledImage);
 
         imgSaveToDisk(bwImg, "bw_pic.png");
 
