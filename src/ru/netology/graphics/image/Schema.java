@@ -1,9 +1,9 @@
 package ru.netology.graphics.image;
 
 public class Schema implements TextColorSchema {
-    private static final char[] letters = new char[] {'#','$','@','%','*','+','-','\''};
+    private static final char[] LETTERS = new char[] {'#','$','@','%','*','+','-','\''};
     @Override
     public char convert(int color) {
-        return letters[color / 32];
+        return LETTERS[color / 32];
     }
 }
