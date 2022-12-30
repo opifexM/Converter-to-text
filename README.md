@@ -1,3 +1,5 @@
+[![Maintainability](https://api.codeclimate.com/v1/badges/c557c5b87396d7446368/maintainability)](https://codeclimate.com/github/opifexM/Converter-to-text/maintainability)
+
 # Converter-to-text
 
 Program features:
